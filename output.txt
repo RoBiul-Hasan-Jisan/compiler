@@ -1,0 +1,8 @@
+Keyword: int
+Identifier: num
+Keyword: char
+Error: 1a
+Keyword: int
+Identifier: _1
+Keyword: int
+Error: 444
