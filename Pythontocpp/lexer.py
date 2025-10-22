@@ -1,7 +1,9 @@
-# ---------------- Tokenizer ----------------
+##bool  switch  break continue  not  work  hare  just  mantion
+# Tokenizer 
 KEYWORDS = {
-    'int', 'float', 'double', 'long', 'char', 'string',
-    'return', 'print', 'if', 'else', 'while', 'for'
+    'int', 'float', 'double', 'long', 'char', 'string', 'bool',
+    'return', 'print', 'if', 'else', 'while', 'for',
+    'break', 'continue', 'switch', 'case', 'default', 'true', 'false'
 }
 
 OPERATORS = {
@@ -13,7 +15,7 @@ OPERATORS = {
 
 DELIMITERS = {
     '(': 'LPAREN', ')': 'RPAREN', '{': 'LBRACE', '}': 'RBRACE',
-    '[': 'LBRACKET', ']': 'RBRACKET', ';': 'SEMI', ',': 'COMMA'
+    '[': 'LBRACKET', ']': 'RBRACKET', ';': 'SEMI', ',': 'COMMA', ':': 'COLON'
 }
 
 def tokenize(code):
@@ -77,7 +79,7 @@ def tokenize(code):
                     i += 1
             if i >= length or code[i] != '"':
                 raise SyntaxError(f"Unterminated string literal at line {line_num}")
-            i += 1  # skip closing "
+            i += 1
             yield ('STRING_LIT', '"' + string_val + '"', start, line_num)
             continue
 
@@ -95,7 +97,7 @@ def tokenize(code):
                     i += 1
             if i >= length or code[i] != "'":
                 raise SyntaxError(f"Unterminated char literal at line {line_num}")
-            i += 1  # skip closing '
+            i += 1
             yield ('CHAR_LIT', "'" + char_val + "'", start, line_num)
             continue
 
@@ -115,7 +117,7 @@ def tokenize(code):
 
         # --- Operators ---
         matched = False
-        for op_len in (2,1):  # try 2-char operators first
+        for op_len in (2,1):
             if i + op_len <= length:
                 substr = code[i:i+op_len]
                 if substr in OPERATORS:

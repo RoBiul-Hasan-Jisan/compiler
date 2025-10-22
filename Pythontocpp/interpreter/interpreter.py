@@ -7,21 +7,28 @@ class ReturnException(Exception):
     def __init__(self, value):
         self.value = value
 
+class ReturnValue(Exception):
+    def __init__(self, value):
+        self.value = value
+
 class Interpreter:
     def __init__(self, program):
         self.program = program
-        self.functions = {fn.name: fn for fn in program.functions}
-        # Built-in stubs (POW)
-        self.functions['bfs'] = None
-        self.functions['dfs'] = None
+        # Collect functions
+        self.functions = {fn.name: fn for fn in getattr(program, 'functions', [])}
+        # Built-in stubs
+        self.functions.setdefault('bfs', None)
+        self.functions.setdefault('dfs', None)
         if 'main' not in self.functions:
             raise RuntimeError("No main() function found")
 
+    # ---------------- Run Program ----------------
     def run(self):
         return self.exec_function(self.functions['main'])
 
     def exec_function(self, fn, env=None):
-        if env is None: env = {}
+        if env is None:
+            env = {}
         try:
             self.exec_block(fn.body, env)
         except ReturnException as re:
@@ -35,8 +42,7 @@ class Interpreter:
 
     # ---------------- Statements ----------------
     def exec_stmt(self, stmt, env):
-        if stmt is None:
-            return
+        if stmt is None: return
         try:
             if isinstance(stmt, VarDecl):
                 if stmt.name in env:
@@ -114,13 +120,13 @@ class Interpreter:
         except Exception as e:
             raise RuntimeErrorWithLine(f"{e} at statement {stmt}")
 
+    # ---------------- Helpers ----------------
     def eval_stmt_or_expr(self, stmt_or_expr, env):
         if isinstance(stmt_or_expr, (Assignment, UnaryOp, ExprStmt)):
             self.exec_stmt(stmt_or_expr, env)
         else:
             self.eval_expr(stmt_or_expr, env)
 
-    # ---------------- Helpers ----------------
     def default_value(self, vtype):
         if vtype in ('INT','LONG','DOUBLE','FLOAT','LONG LONG'): return 0
         if vtype=='CHAR': return '\0'
@@ -128,7 +134,7 @@ class Interpreter:
         return None
 
     def init_array(self, dims):
-        if len(dims) == 0: return 0
+        if not dims: return 0
         return [self.init_array(dims[1:]) for _ in range(dims[0])]
 
     def assign_array(self, array_ref, value, env):
@@ -172,57 +178,84 @@ class Interpreter:
         if isinstance(expr, BinaryOp):
             l = self.eval_expr(expr.left, env)
             r = self.eval_expr(expr.right, env)
-            op = expr.op
-            if op=='PLUS': return l+r
-            if op=='MINUS': return l-r
-            if op=='MULT': return l*r
-            if op=='DIV': return l//r if isinstance(l,int) and isinstance(r,int) else l/r
-            if op=='EQ': return int(l==r)
-            if op=='NE': return int(l!=r)
-            if op=='GT': return int(l>r)
-            if op=='LT': return int(l<r)
-            if op=='GE': return int(l>=r)
-            if op=='LE': return int(l<=r)
-            if op=='AND': return int(bool(l) and bool(r))
-            if op=='OR': return int(bool(l) or bool(r))
+            return self._apply_binary_op(expr.op, l, r)
 
         if isinstance(expr, UnaryOp):
-            if expr.op in ('PLUSPLUS','MINUSMINUS'):
-                if isinstance(expr.operand, VarRef):
-                    return self._apply_unary_var(expr, env)
-                elif isinstance(expr.operand, ArrayRef):
-                    return self._apply_unary_array(expr, env)
-                else:
-                    raise RuntimeErrorWithLine(f"Invalid unary operation {expr.op}")
+            return self._apply_unary(expr, env)
 
-            if expr.op=='PLUS': return +self.eval_expr(expr.operand, env)
-            if expr.op=='MINUS': return -self.eval_expr(expr.operand, env)
+        if isinstance(expr, FunctionCall):
+            return self.eval_function_call(expr, env)
 
         raise RuntimeErrorWithLine(f"Unknown expression {expr} of type {type(expr)}")
+
+    # ---------------- Function Support ----------------
+    def eval_function_call(self, node, env):
+        func = self.functions.get(node.name)
+        if not func:
+            raise RuntimeError(f"Function '{node.name}' not defined")
+        if len(func.params) != len(node.args):
+            raise RuntimeError(f"Function '{node.name}' expects {len(func.params)} args, got {len(node.args)}")
+
+        # Evaluate arguments
+        arg_values = [self.eval_expr(arg, env) for arg in node.args]
+
+        # Create local env
+        local_env = {} if env is None else dict(env)
+        for (p_type, p_name), val in zip(func.params, arg_values):
+            local_env[p_name] = (p_type, val)
+
+        # Execute function
+        try:
+            self.exec_block(func.body, local_env)
+        except ReturnValue as ret:
+            return ret.value
+        except ReturnException as ret:
+            return ret.value
+        return None
+
+    def eval_return_stmt(self, node, env=None):
+        value = self.eval_expr(node.expr, env)
+        raise ReturnValue(value)
+
+    # ---------------- Operators ----------------
+    def _apply_binary_op(self, op, l, r):
+        if op=='PLUS': return l+r
+        if op=='MINUS': return l-r
+        if op=='MULT': return l*r
+        if op=='DIV': return l//r if isinstance(l,int) and isinstance(r,int) else l/r
+        if op=='EQ': return int(l==r)
+        if op=='NE': return int(l!=r)
+        if op=='GT': return int(l>r)
+        if op=='LT': return int(l<r)
+        if op=='GE': return int(l>=r)
+        if op=='LE': return int(l<=r)
+        if op=='AND': return int(bool(l) and bool(r))
+        if op=='OR': return int(bool(l) or bool(r))
+        raise RuntimeErrorWithLine(f"Unknown binary operator {op}")
+
+    def _apply_unary(self, expr, env):
+        if expr.op in ('PLUSPLUS','MINUSMINUS'):
+            if isinstance(expr.operand, VarRef):
+                return self._apply_unary_var(expr, env)
+            elif isinstance(expr.operand, ArrayRef):
+                return self._apply_unary_array(expr, env)
+            else:
+                raise RuntimeErrorWithLine(f"Invalid unary operation {expr.op}")
+        if expr.op=='PLUS': return +self.eval_expr(expr.operand, env)
+        if expr.op=='MINUS': return -self.eval_expr(expr.operand, env)
 
     def _apply_unary_var(self, expr, env):
         vtype, old = env[expr.operand.name]
         if expr.op=='PLUSPLUS':
-            if getattr(expr,'postfix',False):
-                env[expr.operand.name] = (vtype, old+1)
-                return old
-            else:
-                env[expr.operand.name] = (vtype, old+1)
-                return old+1
+            env[expr.operand.name] = (vtype, old+1)
+            return old if getattr(expr,'postfix',False) else old+1
         if expr.op=='MINUSMINUS':
-            if getattr(expr,'postfix',False):
-                env[expr.operand.name] = (vtype, old-1)
-                return old
-            else:
-                env[expr.operand.name] = (vtype, old-1)
-                return old-1
+            env[expr.operand.name] = (vtype, old-1)
+            return old if getattr(expr,'postfix',False) else old-1
 
     def _apply_unary_array(self, expr, env):
         arr_ref = expr.operand
         old = self.eval_array_ref(arr_ref, env)
         new_val = old+1 if expr.op=='PLUSPLUS' else old-1
         self.assign_array(arr_ref, new_val, env)
-        if getattr(expr,'postfix',False):
-            return old
-        else:
-            return new_val
+        return old if getattr(expr,'postfix',False) else new_val

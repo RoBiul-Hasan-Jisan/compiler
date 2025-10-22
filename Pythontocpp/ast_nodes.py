@@ -99,3 +99,12 @@ class ForStmt(Node):
         self.update = update
         self.body = body
 
+class FunctionDecl(Node):
+    def __init__(self, name, body, params=None):
+        self.name = name
+        self.body = body
+        self.params = params or []
+class FunctionCall(Node):
+    def __init__(self, name, args):
+        self.name = name
+        self.args = args
