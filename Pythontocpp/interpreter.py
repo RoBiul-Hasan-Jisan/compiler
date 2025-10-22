@@ -30,7 +30,6 @@ class Interpreter:
 
     # ---------------- Block ----------------
     def exec_block(self, block, env):
-        # Use the same environment so variable updates persist
         for stmt in block.stmts:
             self.exec_stmt(stmt, env)
 
@@ -69,7 +68,7 @@ class Interpreter:
                 print(val)
                 return
 
-            if isinstance(stmt, UnaryOp):  #  for i++ / i-- as statement
+            if isinstance(stmt, UnaryOp):
                 self.eval_expr(stmt, env)
                 return
 
@@ -95,7 +94,6 @@ class Interpreter:
                 return
 
             if isinstance(stmt, ForStmt):
-                # Execute initialization
                 if stmt.init:
                     self.exec_stmt(stmt.init, env)
                 while True:
@@ -111,8 +109,10 @@ class Interpreter:
 
         except RuntimeErrorWithLine as e:
             raise RuntimeErrorWithLine(f"{e} at statement {stmt}")
+        except ReturnException:
+            raise
         except Exception as e:
-            raise RuntimeErrorWithLine(f"{e}")
+            raise RuntimeErrorWithLine(f"{e} at statement {stmt}")
 
     def eval_stmt_or_expr(self, stmt_or_expr, env):
         if isinstance(stmt_or_expr, (Assignment, UnaryOp, ExprStmt)):
@@ -187,7 +187,6 @@ class Interpreter:
             if op=='OR': return int(bool(l) or bool(r))
 
         if isinstance(expr, UnaryOp):
-            # Handle ++ / -- on VarRef or ArrayRef
             if expr.op in ('PLUSPLUS','MINUSMINUS'):
                 if isinstance(expr.operand, VarRef):
                     return self._apply_unary_var(expr, env)
