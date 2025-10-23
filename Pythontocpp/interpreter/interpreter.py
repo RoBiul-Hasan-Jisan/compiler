@@ -1,5 +1,7 @@
 from ast_nodes import *
+import copy
 
+# ---------------- Exceptions ----------------
 class RuntimeErrorWithLine(Exception):
     pass
 
@@ -7,10 +9,7 @@ class ReturnException(Exception):
     def __init__(self, value):
         self.value = value
 
-class ReturnValue(Exception):
-    def __init__(self, value):
-        self.value = value
-
+# ---------------- Interpreter ----------------
 class Interpreter:
     def __init__(self, program):
         self.program = program
@@ -27,10 +26,9 @@ class Interpreter:
         return self.exec_function(self.functions['main'])
 
     def exec_function(self, fn, env=None):
-        if env is None:
-            env = {}
+        local_env = copy.deepcopy(env) if env else {}
         try:
-            self.exec_block(fn.body, env)
+            self.exec_block(fn.body, local_env)
         except ReturnException as re:
             return re.value
         return 0
@@ -44,6 +42,7 @@ class Interpreter:
     def exec_stmt(self, stmt, env):
         if stmt is None: return
         try:
+            # Variable declaration
             if isinstance(stmt, VarDecl):
                 if stmt.name in env:
                     raise RuntimeErrorWithLine(f"Variable '{stmt.name}' redeclared")
@@ -51,6 +50,7 @@ class Interpreter:
                 env[stmt.name] = (stmt.vtype, val)
                 return
 
+            # Array declaration
             if isinstance(stmt, ArrayDecl):
                 if stmt.name in env:
                     raise RuntimeErrorWithLine(f"Array '{stmt.name}' redeclared")
@@ -58,6 +58,7 @@ class Interpreter:
                 env[stmt.name] = (stmt.vtype, val)
                 return
 
+            # Assignment
             if isinstance(stmt, Assignment):
                 if isinstance(stmt.name, ArrayRef):
                     self.assign_array(stmt.name, self.eval_expr(stmt.expr, env), env)
@@ -69,23 +70,28 @@ class Interpreter:
                     env[stmt.name] = (vtype, val)
                 return
 
+            # Print
             if isinstance(stmt, PrintStmt):
                 val = self.eval_expr(stmt.expr, env)
                 print(val)
                 return
 
+            # Unary operation
             if isinstance(stmt, UnaryOp):
                 self.eval_expr(stmt, env)
                 return
 
+            # Return
             if isinstance(stmt, ReturnStmt):
                 val = self.eval_expr(stmt.expr, env)
                 raise ReturnException(val)
 
+            # Expression statement
             if isinstance(stmt, ExprStmt):
                 self.eval_expr(stmt.expr, env)
                 return
 
+            # If statement
             if isinstance(stmt, IfStmt):
                 cond = self.eval_expr(stmt.cond, env)
                 if cond:
@@ -94,11 +100,13 @@ class Interpreter:
                     self.exec_block(stmt.else_block, env)
                 return
 
+            # While loop
             if isinstance(stmt, WhileStmt):
                 while self.eval_expr(stmt.cond, env):
                     self.exec_block(stmt.body, env)
                 return
 
+            # For loop
             if isinstance(stmt, ForStmt):
                 if stmt.init:
                     self.exec_stmt(stmt.init, env)
@@ -131,6 +139,7 @@ class Interpreter:
         if vtype in ('INT','LONG','DOUBLE','FLOAT','LONG LONG'): return 0
         if vtype=='CHAR': return '\0'
         if vtype=='STRING': return ""
+        if vtype=='BOOL': return 0
         return None
 
     def init_array(self, dims):
@@ -168,6 +177,8 @@ class Interpreter:
         if isinstance(expr, Char): return expr.value
 
         if isinstance(expr, VarRef):
+            if expr.name in ('TRUE','FALSE'):
+                return 1 if expr.name=='TRUE' else 0
             if expr.name not in env:
                 raise RuntimeErrorWithLine(f"Variable '{expr.name}' not declared")
             return env[expr.name][1]
@@ -197,25 +208,19 @@ class Interpreter:
             raise RuntimeError(f"Function '{node.name}' expects {len(func.params)} args, got {len(node.args)}")
 
         # Evaluate arguments
-        arg_values = [self.eval_expr(arg, env) for arg in node.args]
+        arg_values = [self.eval_expr(arg, env or {}) for arg in node.args]
 
-        # Create local env
-        local_env = {} if env is None else dict(env)
+        # Local environment
+        local_env = copy.deepcopy(env) if env else {}
         for (p_type, p_name), val in zip(func.params, arg_values):
             local_env[p_name] = (p_type, val)
 
         # Execute function
         try:
             self.exec_block(func.body, local_env)
-        except ReturnValue as ret:
-            return ret.value
         except ReturnException as ret:
             return ret.value
         return None
-
-    def eval_return_stmt(self, node, env=None):
-        value = self.eval_expr(node.expr, env)
-        raise ReturnValue(value)
 
     # ---------------- Operators ----------------
     def _apply_binary_op(self, op, l, r):
@@ -243,6 +248,7 @@ class Interpreter:
                 raise RuntimeErrorWithLine(f"Invalid unary operation {expr.op}")
         if expr.op=='PLUS': return +self.eval_expr(expr.operand, env)
         if expr.op=='MINUS': return -self.eval_expr(expr.operand, env)
+        raise RuntimeErrorWithLine(f"Unknown unary operator {expr.op}")
 
     def _apply_unary_var(self, expr, env):
         vtype, old = env[expr.operand.name]

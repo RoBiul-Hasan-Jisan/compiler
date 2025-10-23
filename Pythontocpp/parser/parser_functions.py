@@ -2,12 +2,13 @@ from ast_nodes import *
 from parser import Parser  # your main root parser
 
 class ParserWithParams(Parser):  # inherit your existing Parser
+
     # ---------------- Function Parsing ----------------
     def parse_function(self):
         ret_type = self.next()[0]        # return type
         name = self.expect('ID')[1]      # function name
         self.expect('LPAREN')
-        
+
         # --- Parse parameters ---
         params = []
         while self.peek()[0] != 'RPAREN':
@@ -17,7 +18,7 @@ class ParserWithParams(Parser):  # inherit your existing Parser
             if self.peek()[0] == 'COMMA':
                 self.next()  # skip comma
         self.expect('RPAREN')
-        
+
         body = self.parse_block()
         return FunctionDecl(name, body, params=params)
 
@@ -40,10 +41,15 @@ class ParserWithParams(Parser):  # inherit your existing Parser
             self.next()
             return Char(tok[1][1])
 
+        # --- Boolean literals ---
+        if tok[0] in ('TRUE', 'FALSE'):
+            self.next()
+            return Number(1 if tok[0] == 'TRUE' else 0)
+
         # --- Identifier / Variable / Function Call ---
         if tok[0] == 'ID':
             # Check if it's a function call
-            if self.tokens[self.pos+1][0] == 'LPAREN':
+            if self.pos + 1 < len(self.tokens) and self.tokens[self.pos+1][0] == 'LPAREN':
                 func_name = self.next()[1]
                 self.expect('LPAREN')
                 args = []

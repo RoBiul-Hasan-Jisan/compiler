@@ -1,18 +1,22 @@
-class Node: pass
+class Node:
+    pass
 
+# ---------------- Program & Functions ----------------
 class Program(Node):
     def __init__(self, functions):
         self.functions = functions
 
 class FunctionDecl(Node):
-    def __init__(self, name, body):
+    def __init__(self, name, body, params=None):
         self.name = name
         self.body = body
+        self.params = params or []
 
 class Block(Node):
     def __init__(self, stmts):
         self.stmts = stmts
 
+# ---------------- Variables & Arrays ----------------
 class VarDecl(Node):
     def __init__(self, vtype, name, init=None):
         self.vtype = vtype
@@ -35,6 +39,7 @@ class ArrayRef(Node):
         self.name = name
         self.indices = indices
 
+# ---------------- Expressions ----------------
 class PrintStmt(Node):
     def __init__(self, expr):
         self.expr = expr
@@ -58,7 +63,7 @@ class UnaryOp(Node):
         """
         op: 'PLUSPLUS', 'MINUSMINUS', etc.
         operand: the variable or expression
-        postfix: True if it's a postfix operator (i++, i--), False for prefix (++i, --i)
+        postfix: True if postfix operator (i++, i--), False if prefix (++i, --i)
         """
         self.op = op
         self.operand = operand
@@ -80,6 +85,11 @@ class VarRef(Node):
     def __init__(self, name):
         self.name = name
 
+class Bool(Node):
+    """Represents boolean literals: true or false"""
+    def __init__(self, value: bool):
+        self.value = value
+
 # ---------------- Control Flow ----------------
 class IfStmt(Node):
     def __init__(self, cond, then_block, else_block=None):
@@ -99,12 +109,53 @@ class ForStmt(Node):
         self.update = update
         self.body = body
 
-class FunctionDecl(Node):
-    def __init__(self, name, body, params=None):
-        self.name = name
-        self.body = body
-        self.params = params or []
+class BreakStmt(Node):
+    """Represents 'break;' inside loops or switch"""
+    pass
+
+class ContinueStmt(Node):
+    """Represents 'continue;' inside loops"""
+    pass
+
+# ---------------- Functions ----------------
 class FunctionCall(Node):
     def __init__(self, name, args):
         self.name = name
         self.args = args
+
+# ---------------- Graph Support ----------------
+class GraphInit(Node):
+    """Represents: graph g(5);"""
+    def __init__(self, num_vertices):
+        self.num_vertices = num_vertices
+
+class MethodCall(Node):
+    """Represents: g.addEdge(0, 1);"""
+    def __init__(self, obj, method, args):
+        self.obj = obj
+        self.method = method
+        self.args = args
+
+# ---------------- Switch Statement ----------------
+class SwitchStmt(Node):
+    """Represents a switch statement"""
+    def __init__(self, expr, cases, default=None):
+        """
+        expr: expression being switched on
+        cases: list of CaseStmt objects
+        default: DefaultStmt or None
+        """
+        self.expr = expr
+        self.cases = cases
+        self.default = default
+
+class CaseStmt(Node):
+    """Represents a case inside switch"""
+    def __init__(self, value, body):
+        self.value = value
+        self.body = body
+
+class DefaultStmt(Node):
+    """Represents default case inside switch"""
+    def __init__(self, body):
+        self.body = body

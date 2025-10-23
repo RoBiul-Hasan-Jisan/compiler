@@ -1,7 +1,8 @@
-from .interpreter import Interpreter  # relative import
-from ast_nodes import FunctionCall, ReturnStmt, IfStmt, WhileStmt
+from copy import deepcopy
+from .interpreter import Interpreter
+from ast_nodes import FunctionCall, ReturnStmt, IfStmt, WhileStmt, ForStmt
 
-class ReturnValue(Exception):
+class ReturnException(Exception):
     def __init__(self, value):
         self.value = value
 
@@ -17,7 +18,7 @@ class InterpreterWithFunctions(Interpreter):
     def run(self):
         try:
             return super().run()
-        except ReturnValue as ret:
+        except ReturnException as ret:
             return ret.value
 
     # ---------------- Function Call ----------------
@@ -31,16 +32,18 @@ class InterpreterWithFunctions(Interpreter):
                 f"Function '{node.name}' expects {len(func.params)} args, got {len(node.args)}"
             )
 
+        # Evaluate arguments
         arg_values = [self.eval_expr(arg, env) for arg in node.args]
 
-        local_env = {} if env is None else dict(env)
+        # Create isolated local environment
+        local_env = deepcopy(env) if env else {}
         for (p_type, p_name), val in zip(func.params, arg_values):
             local_env[p_name] = (p_type, val)
 
+        # Execute function body
         try:
-            for stmt in func.body.stmts:
-                self.exec_stmt(stmt, local_env)
-        except ReturnValue as ret:
+            self.exec_block(func.body, local_env)
+        except ReturnException as ret:
             return ret.value
 
         return None
@@ -48,15 +51,15 @@ class InterpreterWithFunctions(Interpreter):
     # ---------------- Return Statement ----------------
     def eval_ReturnStmt(self, node, env=None):
         value = self.eval_expr(node.expr, env)
-        raise ReturnValue(value)
+        raise ReturnException(value)
 
-    # ---------------- Override eval_expr to handle FunctionCall ----------------
+    # ---------------- Override eval_expr ----------------
     def eval_expr(self, expr, env=None):
         if isinstance(expr, FunctionCall):
             return self.eval_FunctionCall(expr, env)
         return super().eval_expr(expr, env)
 
-    # ---------------- Override exec_stmt to handle ReturnStmt ----------------
+    # ---------------- Override exec_stmt ----------------
     def exec_stmt(self, stmt, env):
         if isinstance(stmt, ReturnStmt):
             self.eval_ReturnStmt(stmt, env)
@@ -64,16 +67,15 @@ class InterpreterWithFunctions(Interpreter):
             self.eval_IfStmt(stmt, env)
         elif isinstance(stmt, WhileStmt):
             self.eval_WhileStmt(stmt, env)
+        elif isinstance(stmt, ForStmt):
+            self.eval_ForStmt(stmt, env)
         else:
             super().exec_stmt(stmt, env)
 
     # ---------------- Boolean-safe IfStmt ----------------
     def eval_IfStmt(self, node, env):
-        cond = self.eval_expr(node.cond, env)
-        # If stored as (type, value), take value
-        if isinstance(cond, tuple):
-            cond = cond[1]
-        if cond:  # 0 -> False, nonzero -> True
+        cond = self._unwrap(self.eval_expr(node.cond, env))
+        if cond:  # nonzero -> True
             self.exec_block(node.then_block, env)
         elif node.else_block:
             self.exec_block(node.else_block, env)
@@ -81,9 +83,27 @@ class InterpreterWithFunctions(Interpreter):
     # ---------------- Boolean-safe WhileStmt ----------------
     def eval_WhileStmt(self, node, env):
         while True:
-            cond = self.eval_expr(node.cond, env)
-            if isinstance(cond, tuple):
-                cond = cond[1]
+            cond = self._unwrap(self.eval_expr(node.cond, env))
             if not cond:
                 break
             self.exec_block(node.body, env)
+
+    # ---------------- Boolean-safe ForStmt ----------------
+    def eval_ForStmt(self, node, env):
+        if node.init:
+            self.exec_stmt(node.init, env)
+        while True:
+            cond_val = True
+            if node.cond:
+                cond_val = self._unwrap(self.eval_expr(node.cond, env))
+            if not cond_val:
+                break
+            self.exec_block(node.body, env)
+            if node.update:
+                self.eval_stmt_or_expr(node.update, env)
+
+    # ---------------- Helper: unwrap (type,value) ----------------
+    def _unwrap(self, val):
+        if isinstance(val, tuple) and len(val) == 2:
+            return val[1]
+        return val

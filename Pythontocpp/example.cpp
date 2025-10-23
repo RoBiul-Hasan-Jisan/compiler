@@ -1,36 +1,36 @@
 int main() {
     int a = 5;
     int b = 10;
-   
 
-    // ---------- Unary operators ----------
-    a++;    // 6
-    b--;    // 9
-    print(a);
-    print(b);
-
- 
-
-    // ---------- Comparison operators ----------
+    // Boolean expressions
     print(a < b);   // 1 (true)
-    print(a <= b);  // 1
-    print(a > b);   // 0
-    print(a >= b);  // 0
-    print(a == b);  // 0
-    print(a != b);  // 1
+    print(a > b);   // 0 (false)
+    print(a != b);  // 1 (true)
+    print(a == 5);  // 1 (true)
 
-    // ---------- Logical operators ----------
-    print((a < b) && (b > 0));   // 1
-    print((a > b) || (b > 0));   // 1
-
-    // ---------- If-Else chains ----------
-    if (a > b) {
-        print("a > b");
+    // If-Else If-Else
+    if (a < b) {
+        print("a is less than b");
+    } else if (a == b) {
+        print("a is equal to b");
+    } else {
+        print("a is greater than b");
     }
-   
-    else 
-    {
-        print("a < b");  // Expected output
+
+    // Switch-case simulation
+    int option = 2;
+    switch (option) {
+        case 1:
+            print("Option is 1");
+            break;
+        case 2:
+            print("Option is 2");
+            break;
+        case 3:
+            print("Option is 3");
+            break;
+        default:
+            print("Option is something else");
     }
 
     return 0;

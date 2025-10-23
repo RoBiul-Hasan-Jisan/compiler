@@ -1,0 +1,277 @@
+Guidelines for Writing Programs for Your C-like Python Compiler
+
+This compiler supports a subset of C/C++ syntax: functions, variables, expressions, loops, conditionals, arrays, strings, booleans, switch-case, and basic operators.
+
+1. Variables
+
+Supported types: int, float, char, string, bool.
+
+Variables must be declared before use.
+
+Example:
+
+int a = 5;
+float f = 3.14;
+char c = 'x';
+string s = "hello";
+bool flag = true;
+
+
+Arrays: Fixed size only, e.g., int arr[3];
+
+Indexing starts at 0:
+
+arr[0] = 10;
+print(arr[0]);
+
+2. Arithmetic & Unary Operators
+
+Basic arithmetic: +, -, *, /
+
+Unary operators: ++, -- (supports prefix and postfix)
+
+Example:
+
+int sum = a + 10;
+a++;
+b--;
+float div = b / 2.0;
+
+3. Comparison & Logical Operators
+
+Comparison: <, <=, >, >=, ==, !=
+
+Logical: &&, ||
+
+Example:
+
+print(a < b);              // 1 (true)
+print(a > b);              // 0 (false)
+print((a < b) && (b > 0)); // 1
+print((a > b) || (b > 0)); // 1
+
+
+Boolean literals: true → 1, false → 0.
+
+4. Conditional Statements (if-else)
+
+Syntax:
+
+if (condition) {
+    // statements
+} else {
+    // statements
+}
+
+
+Example:
+
+if (s == "hello") {
+    print("s is hello");
+} else {
+    print("s is not hello");
+}
+
+
+Note: else if chains are not supported. Only if { } else { } is allowed.
+
+5. Loops
+While Loop
+int i = 0;
+while (i < 5) {
+    print(i);
+    i++;
+}
+
+For Loop
+
+Only simple C-like for loops: initialization; condition; update
+
+for (int j = 0; j < 5; j = j + 1) {
+    print(j);
+}
+
+
+break and continue are supported inside loops:
+
+while (true) {
+    if (i == 3) break;
+    i++;
+    continue;
+}
+
+6. Functions
+
+Define functions with a return type: int, float, char, string, bool, void
+
+Parameters must include types
+
+Return is mandatory for non-void functions
+
+Array parameters are not allowed; arrays must be global or handled in the same scope
+
+Example:
+
+int add(int x, int y) {
+    return x + y;
+}
+
+void printHello() {
+    print("Hello World");
+}
+
+// Function calls
+int result = add(5, 10);
+print(result);
+printHello();
+
+7. Printing
+
+Use print() for numbers, strings, characters, and booleans.
+
+print(5);
+print("hello");
+print('x');
+print(true);  // 1
+print(false); // 0
+
+8. Arrays
+
+Fixed size only: int arr[3];
+
+Assigning values:
+
+arr[0] = 1;
+arr[1] = 2;
+arr[2] = 3;
+
+
+Accessing values:
+
+print(arr[1]);
+
+
+Note: Passing arrays to functions is not allowed. Use global arrays or handle them in the same scope.
+
+9. Strings
+
+Strings must be in double quotes: "hello"
+
+Supported operators: ==, !=
+
+Example:
+
+string s = "hello";
+if (s == "hello") {
+    print("Hi");
+}
+
+10. Booleans
+
+Supported literals: true and false
+
+Can be used in expressions, conditionals, and loops
+
+Example:
+
+bool flag1 = true;
+bool flag2 = false;
+
+print(flag1);           // 1
+print(flag2);           // 0
+print(flag1 && flag2);  // 0
+print(flag1 || flag2);  // 1
+
+11. Switch-Case Statement
+
+Supports switch, case, and default
+
+Use break to prevent fall-through
+
+Syntax:
+
+switch (expr) {
+    case 1:
+        print("One");
+        break;
+    case 2:
+        print("Two");
+        break;
+    default:
+        print("Other");
+}
+
+12. General Guidelines
+
+main() function is required:
+
+int main() {
+    // program code
+    return 0;
+}
+
+
+Variable names must be unique in the same scope
+
+Nested scopes are allowed inside if, else, loops, functions
+
+Functions must be declared before calling (no forward declarations)
+
+Return values:
+
+void functions should not return anything
+
+Non-void functions must return a value
+
+13. Complete Example Program
+int add(int x, int y) {
+    return x + y;
+}
+
+void printNumbers(int arr, int size) {
+    int i = 0;
+    while (i < size) {
+        print(arr[i]);
+        i++;
+    }
+}
+
+int main() {
+    int a = 5;
+    int b = 10;
+    bool flag = true;
+    int arr[3];
+    arr[0] = 1;
+    arr[1] = 2;
+    arr[2] = 3;
+
+    int sum = add(a, b);
+    print(sum);
+
+    printNumbers(arr, 3);
+
+    if (a < b) {
+        print("a is less than b");
+    } else {
+        print("a is greater or equal b");
+    }
+
+    // Boolean example
+    print(flag && (a < b));  // 1
+    print(flag || (a > b));  // 1
+
+    // Switch-case
+    int option = 2;
+    switch(option) {
+        case 1:
+            print("Option 1");
+            break;
+        case 2:
+            print("Option 2");
+            break;
+        default:
+            print("Other option");
+    }
+
+    return sum;
+}
