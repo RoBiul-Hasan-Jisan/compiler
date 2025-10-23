@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Compiler</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+            font-family: monospace;
+            font-size: 14px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            resize: vertical;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+        }
+        pre {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #222;
+            color: #fff;
+            border-radius: 5px;
+            min-height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <h1> Compiler</h1>
+    <textarea id="code">int main() {
+    int a = 5;
+    int b = 10;
+    print(a + b);
+    return 0;
+}</textarea>
+    <br>
+    <button id="run">Run</button>
+    <pre id="output">Output will appear here...</pre>
+
+    <script type="module">
+        const runButton = document.getElementById("run");
+        const codeArea = document.getElementById("code");
+        const outputArea = document.getElementById("output");
+
+        runButton.addEventListener("click", async () => {
+            outputArea.textContent = "Running...";
+            try {
+                const response = await fetch("/run", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ code: codeArea.value })
+                });
+                const data = await response.json();
+                if (data.output) {
+                    outputArea.textContent = data.output;
+                } else if (data.error) {
+                    outputArea.textContent = "Error: " + data.error;
+                } else {
+                    outputArea.textContent = "No output";
+                }
+            } catch (err) {
+                outputArea.textContent = "Fetch error: " + err;
+            }
+        });
+    </script>
+</body>
+</html>
