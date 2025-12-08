@@ -1,0 +1,7 @@
+ printf() → Use STLLibrary.printf()
+
+ scanf() → Use STLLibrary.scanf()
+
+ malloc() → Use STLLibrary.malloc()
+
+free() → Use STLLibrary.free()

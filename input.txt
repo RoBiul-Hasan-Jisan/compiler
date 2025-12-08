@@ -1,4 +1,0 @@
-int num
-char 1a 
-int _1
-int 444

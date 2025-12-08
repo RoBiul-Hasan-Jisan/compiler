@@ -1,0 +1,54 @@
+from stl_library import STLLibrary  # Your custom STL class
+
+stl = STLLibrary()
+
+# Read input.txt
+with open("input.txt", "r") as f:
+    code = f.read()
+
+# Simple emulation: replace C++ STL/C functions with Python equivalents
+# This is a naive line-by-line parsing for demo purposes
+
+local_vars = {}  # To store arrays and variables
+
+for line in code.splitlines():
+    line = line.strip()
+    
+    # Skip comments
+    if line.startswith("//") or line == "":
+        continue
+    
+    # Handle legacyIO()
+    if "legacyIO()" in line:
+        output = stl.printf("Hello, World!\n")
+        print(output)
+    
+    # Handle useCustomSTL()
+    elif "useCustomSTL()" in line:
+        arr = [5, 2, 4, 1, 3]
+        sorted_arr = stl.sort(arr)
+        print("Sorted array:", sorted_arr)
+        reversed_arr = stl.reverse(arr)
+        print("Reversed array:", reversed_arr)
+        idx = stl.find(arr, 4)
+        print("Index of 4 in array:", idx)
+        copy_arr = stl.copy(arr)
+        print("Copied array:", copy_arr)
+    
+    # Handle allocateMemory()
+    elif "allocateMemory()" in line:
+        ptr = stl.malloc(10)
+        print("Allocated memory:", ptr)
+        stl.free(ptr)
+        print("Memory freed!")
+    
+    # Handle std::cout
+    elif "std::cout" in line:
+        # Extract the string between quotes for simplicity
+        import re
+        match = re.search(r'"(.*?)"', line)
+        if match:
+            output = stl.printf(match.group(0))
+            print(output)
+
+print("\nSimulation complete using custom STL!")

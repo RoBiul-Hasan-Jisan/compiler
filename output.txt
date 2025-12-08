@@ -1,0 +1,29 @@
+Library File: stdio.h
+Keyword: int
+Function: main()
+Symbol: {
+Comment: // This is a single-line comment
+Comment: /* This is a\n       multi-line comment */
+Keyword: int
+Identifier: x
+Operator: =
+Number: 10
+Symbol: ;
+Keyword: float
+Identifier: y
+Operator: =
+Number: 20.5
+Symbol: ;
+Function: if(x < y)
+Symbol: {
+Identifier: x
+Operator: +=
+Number: 1
+Symbol: ;
+Symbol: }
+Function: printf("Hello, EDU!")
+Symbol: ;
+Keyword: return
+Number: 0
+Symbol: ;
+Symbol: }
