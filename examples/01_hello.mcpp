@@ -1,0 +1,17 @@
+// A first mcpp program: variables, types, and print().
+
+int main() {
+    int age = 21;
+    float gpa = 3.75;
+    char grade = 'A';
+    string name = "Robiul";
+    bool passed = true;
+
+    print("Name:  ", name);
+    print("Age:   ", age);
+    print("GPA:   ", gpa);
+    print("Grade: ", grade);
+    print("Passed: ", passed);
+
+    return 0;
+}

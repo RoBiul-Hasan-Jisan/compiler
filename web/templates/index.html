@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mcpp — compiler playground</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="mark">&gt;_</span>
+      <span class="name">mcpp</span>
+    </div>
+    <div class="tagline">a small C++-like language, compiled and run in Python</div>
+  </header>
+
+  <main>
+    <section class="pane">
+      <div class="pane-header">
+        <span class="pane-title">source.mcpp</span>
+        <div class="toolbar">
+          <select id="examples">
+            <option value="">Load example…</option>
+            {% for name in examples %}
+            <option value="{{ name }}">{{ name }}</option>
+            {% endfor %}
+          </select>
+          <span class="hint">Ctrl/Cmd + Enter to run</span>
+          <button id="run">▶ Run</button>
+        </div>
+      </div>
+      <textarea id="source" spellcheck="false">{{ default_source }}</textarea>
+    </section>
+
+    <section class="pane">
+      <div class="pane-header">
+        <div class="tabs">
+          <button class="tab active" data-tab="stdout">output</button>
+          <button class="tab" data-tab="tokens">tokens</button>
+          <button class="tab" data-tab="ast">ast</button>
+        </div>
+      </div>
+      <div id="stdout-view" class="output-body"></div>
+      <div id="tokens-view" class="output-body hidden"></div>
+      <div id="ast-view" class="output-body hidden"></div>
+    </section>
+  </main>
+
+  <footer>mcpp compiler &middot; lexer &rarr; parser &rarr; interpreter</footer>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+// Fixed-size arrays: declaration, indexing, and a simple scan.
+
+int main() {
+    int scores[5];
+    scores[0] = 88;
+    scores[1] = 92;
+    scores[2] = 79;
+    scores[3] = 95;
+    scores[4] = 60;
+
+    int total = 0;
+    int highest = scores[0];
+
+    for (int i = 0; i < 5; i++) {
+        print("scores[", i, "] = ", scores[i]);
+        total = total + scores[i];
+        if (scores[i] > highest) {
+            highest = scores[i];
+        }
+    }
+
+    print("total   = ", total);
+    print("average = ", total / 5);
+    print("highest = ", highest);
+
+    return 0;
+}

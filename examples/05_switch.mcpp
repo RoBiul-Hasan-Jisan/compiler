@@ -1,0 +1,37 @@
+// switch / case / default, with break to prevent fall-through.
+
+void describeDay(int day) {
+    switch (day) {
+        case 1:
+            print("Monday");
+            break;
+        case 2:
+            print("Tuesday");
+            break;
+        case 3:
+            print("Wednesday");
+            break;
+        case 4:
+            print("Thursday");
+            break;
+        case 5:
+            print("Friday");
+            break;
+        case 6:
+        case 7:
+            print("Weekend");
+            break;
+        default:
+            print("Not a valid day");
+    }
+}
+
+int main() {
+    int i = 1;
+    while (i <= 7) {
+        describeDay(i);
+        i++;
+    }
+    describeDay(9);
+    return 0;
+}
