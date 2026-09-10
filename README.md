@@ -1,4 +1,4 @@
-# Mcpp — a C++-like language compiler, built in Python
+# Mcpp — a C++ like language compiler, built in Python
 `mcpp` is a small compiler/interpreter for a C++-flavoured teaching
 language, built from scratch in pure Python: a hand-written lexer, a
 recursive-descent parser, an AST, and a tree-walking interpreter — no
